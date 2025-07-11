@@ -133,3 +133,68 @@ exports.purchaseFurniture = functions.https.onCall(async (data, context) => {
 
     return { success: true };
 });
+
+//퀘스트 완료 시 보상(포인트) 지급
+exports.completeQuest = functions
+    .runWith({ timeoutSeconds: 60 })
+    .https
+    .onCall(async (data, context) => {
+        //인증 체크
+        if (!context.auth) {
+            throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
+        }
+        const uid = context.auth.uid;
+        const { questId } = data;
+        if (!questId) {
+            throw new functions.https.HttpsError('invalid-argument', 'questId를 전달해야 합니다.');
+        }
+
+        //퀘스트 정보 로드(보상 포인트)
+        const questRef = db.collection('quests').doc(questId);
+        const questSnap = await questRef.get();
+        if (!questSnap.exists) {
+            throw new functions.https.HttpsError('not-found', '해당 퀘스트를 찾을 수 없습니다.');
+        }
+        const { rewardPoint } = questSnap.data();
+        if (typeof rewardPoint !== 'number' || rewardPoint <= 0) {
+            throw new functions.https.HttpsError('failed-precondition', '잘못된 보상 설정입니다.');
+        }
+
+        //트랜잭션으로 포인트 지급 + 완료 기록
+        const userRef = db.collection('users').doc(uid);
+        const statusRef = userRef.collection('questStatus').doc(questId);
+
+        const result = await db.runTransaction(async tx => {
+            const userSnap = await tx.get(userRef);
+            if (!userSnap.exists) {
+                throw new functions.https.HttpsError('not-found', '사용자 정보를 찾을 수 없습니다.');
+            }
+
+            //이미 지급된 퀘스트인지 중복체크
+            const prevStatus = await tx.get(statusRef);
+            if (prevStatus.exists && prevStatus.data().rewardGiven) {
+                throw new functions.https.HttpsError('already-exists', '이미 보상을 받았습니다.');
+            }
+
+            //포인트 증가
+            tx.update(userRef, {
+                point: FieldValue.increment(rewardPoint)
+            });
+            //완료 기록 남기기
+            tx.set(statusRef, {
+                completeAt: new Date(),
+                rewardGiven: true,
+                rewardPoint
+            });
+
+            //트랜잭션 최종 포인트(예시)
+            const newPoint = (userSnap.data().point || 0) + rewardPoint;
+            return { newPoint };
+        });
+
+        return {
+            success: true,
+            message: `퀘스트 ${questId} 완료, ${rewardPoint} 포인트가 지급되었습니다.`,
+            newPoint: result.newPoint
+        };
+    });
