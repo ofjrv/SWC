@@ -10,7 +10,9 @@
   => uesr 문서 : 회원가입한 email, level (초기레벨 1), ownedFurnitures 컬렉션 자동생성
 - furnitures 컬렉션
   : 앱 전체 가구를 포함하는 furnitures 컬렉션
+  
   : 사용자 개별 ownedFurnitures 컬렉션 (회원가입시 생성)
+  
   소유하게된 가구는 ownedFurnitures 컬렉션에 추가
 
 **피드백**
