@@ -1,0 +1,19 @@
+# 1) 모든 node_modules 무시
+**/node_modules/
+
+# 2) Firebase 로컬 디버그/캐시
+.firebase/
+firebase-debug.log
+pglite-debug.log
+
+# 3) 테스트 파일
+*-test.html
+
+# 4) 민감 정보
+*.env
+serviceAccountKey.json
+
+# 5) IDE·OS 설정 파일
+.vscode/
+.DS_Store
+Thumbs.db
