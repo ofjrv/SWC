@@ -4,6 +4,7 @@
 **수정사항**
 - 메일 중복관리 설정 : firebase 함수에서 자동으로 중복처리함
 - GET/POST 방식 : firebase에서 자동으로 POST방식 설정
+
 **추가기능**
 - 로그인시 firestore에 정보(문서) 저장되도록 함
   => uesr 문서 : 회원가입한 email, level (초기레벨 1), ownedFurnitures 컬렉션 자동생성
@@ -11,6 +12,7 @@
   : 앱 전체 가구를 포함하는 furnitures 컬렉션
   : 사용자 개별 ownedFurnitures 컬렉션 (회원가입시 생성)
   소유하게된 가구는 ownedFurnitures 컬렉션에 추가
+
 **피드백**
 
 ## 파일 정리
